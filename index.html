@@ -434,7 +434,7 @@ footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;dis
 <!-- ══════════════════════════════════════════════════════════
      MARKETS PAGE
 ══════════════════════════════════════════════════════════════ -->
-<div id="page-markets" class="page" style="display:none">
+<div id="page-markets" class="page">
   <div class="wrap">
     <div class="pg-hdr">
       <div class="pg-lbl">// Live Prices</div>
@@ -466,7 +466,7 @@ footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;dis
 <!-- ══════════════════════════════════════════════════════════
      QUOTE PAGE
 ══════════════════════════════════════════════════════════════ -->
-<div id="page-quote" class="page" style="display:none">
+<div id="page-quote" class="page">
   <div class="wrap">
     <div class="pg-hdr">
       <div class="pg-lbl">// Stock Lookup</div>
@@ -487,7 +487,7 @@ footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;dis
 <!-- ══════════════════════════════════════════════════════════
      NEWS PAGE
 ══════════════════════════════════════════════════════════════ -->
-<div id="page-news" class="page" style="display:none">
+<div id="page-news" class="page">
   <div class="wrap">
     <div class="pg-hdr">
       <div class="pg-lbl">// Company News</div>
@@ -508,7 +508,7 @@ footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;dis
 <!-- ══════════════════════════════════════════════════════════
      CRYPTO PAGE
 ══════════════════════════════════════════════════════════════ -->
-<div id="page-crypto" class="page" style="display:none">
+<div id="page-crypto" class="page">
   <div class="wrap">
     <div class="pg-hdr">
       <div class="pg-lbl">// Cryptocurrency</div>
@@ -524,7 +524,7 @@ footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;dis
 <!-- ══════════════════════════════════════════════════════════
      SIMULATOR PAGE
 ══════════════════════════════════════════════════════════════ -->
-<div id="page-simulator" class="page" style="display:none">
+<div id="page-simulator" class="page">
   <div class="wrap">
     <div class="pg-hdr">
       <div class="pg-lbl">// Risk Calculator</div>
@@ -567,7 +567,7 @@ footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;dis
 <!-- ══════════════════════════════════════════════════════════
      ABOUT PAGE (hidden, accessible via footer)
 ══════════════════════════════════════════════════════════════ -->
-<div id="page-about" class="page" style="display:none">
+<div id="page-about" class="page">
   <div class="wrap">
     <div class="pg-hdr">
       <div class="pg-lbl">// Info</div>
@@ -729,7 +729,7 @@ const inited = {};
 function go(name) {
   PAGES.forEach(p => {
     const el = $('page-' + p);
-    if (el) el.style.display = p === name ? '' : 'none';
+    if (el) el.classList.toggle('active', p === name);
   });
   $all('.nb').forEach(b => {
     b.classList.toggle('active', b.dataset.page === name);
