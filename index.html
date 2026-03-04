@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MarketCat Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#030508;--s1:#06090F;--s2:#0A0D16;--s3:#0F1320;
+  --b1:#161B2E;--b2:#1E2540;--b3:#252D4A;
+  --accent:#38BFFF;--a2:#7DD5FF;--a3:#B8E8FF;
+  --teal:#2DD4BF;--purple:#8B7CF6;--pink:#F472B6;
+  --text:#E8E6F4;--sub:#9BA5C0;--muted:#4E566E;--dim:#2A3050;
+  --red:#FF3D5A;--r2:#FF6B82;--green:#1FD47A;--g2:#5AE89A;
+  --amber:#FFBB33;--gold:#FFD700;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Syne',sans-serif;
+  --radius:4px;--nav-h:56px;--bar-h:32px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(56,191,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(56,191,255,.015) 1px,transparent 1px);background-size:44px 44px}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--sans);cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:var(--mono);background:var(--s2);border:1px solid var(--b1);color:var(--text);padding:8px 10px;outline:none;border-radius:var(--radius);width:100%;font-size:12px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(3,5,8,.97);backdrop-filter:blur(24px);border-bottom:1px solid var(--b1)}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;flex-shrink:0}
+.logo-icon{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--a2),var(--accent) 50%,#1a6fa8);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;box-shadow:0 0 12px rgba(56,191,255,.3)}
+.logo-name{font-family:var(--display);font-size:15px;font-weight:800;letter-spacing:-.02em}
+.logo-name em{color:var(--accent);font-style:normal}
+.nav-links{display:flex;gap:1px;flex:1;justify-content:center;overflow-x:auto}
+.nb{background:transparent;border:none;color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 9px;border-radius:var(--radius);transition:all .15s;cursor:pointer;white-space:nowrap}
+.nb:hover{color:var(--text);background:var(--s2)}.nb.active{color:var(--accent);background:rgba(56,191,255,.1)}
+.nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nav-live{font-family:var(--mono);font-size:9px;color:var(--green);display:flex;align-items:center;gap:4px}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(31,212,122,.4)}50%{opacity:.7;box-shadow:0 0 0 4px transparent}}
+.btn-cta{background:var(--accent);color:#02040A;border:none;padding:7px 14px;font-family:var(--display);font-size:12px;font-weight:700;border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.btn-cta:hover{background:var(--a2);transform:translateY(-1px)}
+
+/* TICKER BAR */
+.live-bar{position:fixed;top:var(--nav-h);left:0;right:0;z-index:400;height:var(--bar-h);background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;overflow:hidden}
+.t-rail{display:flex;animation:rail 60s linear infinite;white-space:nowrap}.t-rail:hover{animation-play-state:paused}
+.ti{display:inline-flex;align-items:center;gap:5px;padding:0 14px;font-family:var(--mono);font-size:10.5px;border-right:1px solid var(--b1);flex-shrink:0;cursor:pointer;transition:background .1s}
+.ti:hover{background:var(--s2)}.ti-s{color:var(--a2);font-weight:600}
+.up{color:var(--green)}.dn{color:var(--red)}.fl{color:var(--amber)}
+@keyframes rail{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* LAYOUT */
+.wrap{padding-top:calc(var(--nav-h)+var(--bar-h));min-height:100vh}
+.inner{max-width:1440px;margin:0 auto;padding:0 20px 80px}
+.pg-hdr{padding:22px 20px 14px;max-width:1440px;margin:0 auto}
+.pg-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;opacity:.8}
+.pg-title{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.03em;margin-bottom:2px}
+.pg-sub{font-family:var(--mono);font-size:11px;color:var(--sub)}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--radius);overflow:hidden}
+.card-hdr{padding:11px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.card-title{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.card-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:1px}
+.card-body{padding:14px}
+
+/* BUTTONS */
+.btn{background:var(--s2);border:1px solid var(--b1);color:var(--sub);font-family:var(--mono);font-size:10px;padding:6px 11px;border-radius:var(--radius);cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-a{background:rgba(56,191,255,.1);border-color:rgba(56,191,255,.3);color:var(--accent)}
+.btn-g{background:rgba(31,212,122,.1);border-color:rgba(31,212,122,.3);color:var(--green)}
+.btn-r{background:rgba(255,61,90,.1);border-color:rgba(255,61,90,.3);color:var(--red)}
+.btn-d{background:transparent;border-color:transparent;color:var(--muted)}
+.btn-d:hover{border-color:var(--red);color:var(--red)}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.tbl th{padding:8px 10px;text-align:left;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--b1);white-space:nowrap;font-weight:400}
+.tbl td{padding:8px 10px;border-bottom:1px solid rgba(22,27,46,.7);white-space:nowrap;transition:background .1s}
+.tbl tr:hover td{background:rgba(56,191,255,.03)}.tbl .r{text-align:right}.tbl .c{text-align:center}.tbl tr:last-child td{border-bottom:none}
+
+/* METRICS */
+.mt{background:var(--s1);border:1px solid var(--b1);padding:11px 13px;border-radius:var(--radius)}
+.mt-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;display:flex;justify-content:space-between}
+.mt-val{font-family:var(--mono);font-size:15px;font-weight:600}.mt-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px}
+.hl{color:var(--accent)}.gn{color:var(--green)}.rd{color:var(--red)}
+
+/* TOAST + TIP */
+#toast{display:none;position:fixed;bottom:22px;right:22px;z-index:999;background:var(--s3);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:11px;padding:9px 15px;border-radius:var(--radius);box-shadow:0 4px 20px rgba(0,0,0,.4);animation:slideUp .2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+#tip{display:none;position:fixed;z-index:998;background:var(--s2);border:1px solid var(--b2);padding:7px 10px;font-family:var(--mono);font-size:10px;pointer-events:none;max-width:220px;line-height:1.6;border-radius:var(--radius)}
+
+/* HOME */
+.hero{min-height:calc(100vh - var(--nav-h) - var(--bar-h));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative}
+.hero::before{content:'';position:absolute;inset:0;z-index:-1;background:radial-gradient(900px 600px at 50% 25%,rgba(56,191,255,.07),transparent 65%)}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;opacity:.8}
+.hero-h{font-family:var(--display);font-size:clamp(34px,6.5vw,68px);font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:14px}
+.hero-h span{color:var(--accent)}
+.hero-sub{font-size:15px;color:var(--sub);max-width:500px;margin:0 auto 32px;line-height:1.7}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
+.hero-stats{display:flex;gap:2px;flex-wrap:wrap;justify-content:center}
+.hs{background:var(--s1);border:1px solid var(--b1);padding:12px 18px;min-width:130px;cursor:pointer;transition:all .2s;border-radius:var(--radius)}
+.hs:hover{border-color:var(--accent);transform:translateY(-2px)}
+.hs-l{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.hs-v{font-family:var(--mono);font-size:17px;font-weight:600}
+.hs-c{font-family:var(--mono);font-size:10px;margin-top:2px}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px;margin:32px 0}
+.feat{background:var(--s1);border:1px solid var(--b1);padding:16px;cursor:pointer;transition:all .2s;position:relative;border-radius:var(--radius)}
+.feat:hover{border-color:var(--accent);background:var(--s2);transform:translateY(-2px)}
+.feat-ico{font-size:20px;margin-bottom:8px}
+.feat-name{font-family:var(--display);font-size:13px;font-weight:700;margin-bottom:3px}
+.feat-desc{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5}
+.feat-badge{position:absolute;top:9px;right:9px;font-family:var(--mono);font-size:8px;color:var(--accent);background:rgba(56,191,255,.1);border:1px solid rgba(56,191,255,.2);padding:2px 5px;border-radius:2px}
+.feat-badge.new{color:var(--green);background:rgba(31,212,122,.1);border-color:rgba(31,212,122,.2)}
+
+/* MARKETS */
+.markets-layout{display:grid;grid-template-columns:220px 1fr;gap:2px}
+.asset-list{background:var(--s1);border:1px solid var(--b1);border-radius:var(--radius);overflow:hidden}
+.a-item{padding:10px 12px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .1s;display:flex;justify-content:space-between;align-items:center}
+.a-item:last-child{border-bottom:none}.a-item:hover{background:var(--s2)}
+.a-item.active{background:rgba(56,191,255,.08);border-left:2px solid var(--accent)}
+.a-sym{font-family:var(--display);font-size:12px;font-weight:700}
+.a-name{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px}
+.a-right{text-align:right}.a-px{font-family:var(--mono);font-size:12px;font-weight:600}.a-chg{font-family:var(--mono);font-size:10px}
+.chart-area{background:var(--s1);border:1px solid var(--b1);display:flex;flex-direction:column;border-radius:var(--radius)}
+.chart-top{padding:14px 16px;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.ch-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.ch-px{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.02em}
+.ch-chg{font-family:var(--mono);font-size:12px;margin-top:2px}
+.rbtns{display:flex;gap:2px;flex-wrap:wrap}
+.rb{background:var(--s2);border:1px solid var(--b1);color:var(--muted);font-family:var(--mono);font-size:10px;padding:4px 10px;cursor:pointer;transition:all .12s;border-radius:2px}
+.rb.active,.rb:hover{background:var(--accent);color:#02040A;border-color:var(--accent)}
+.chart-body{padding:14px;flex:1}
+.chart-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:2px;padding:10px 14px;border-top:1px solid var(--b1)}
+.met{background:var(--s2);padding:8px 10px;border-radius:var(--radius)}
+.met-l{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.met-v{font-family:var(--mono);font-size:12px;font-weight:600}
+
+/* PAPER TRADE */
+.trade-layout{display:grid;grid-template-columns:290px 1fr;gap:2px;align-items:start}
+.order-panel{background:var(--s1);border:1px solid var(--b1);border-radius:var(--radius);overflow:hidden;position:sticky;top:calc(var(--nav-h)+var(--bar-h)+12px)}
+.op-tabs{display:flex;border-bottom:1px solid var(--b1)}
+.op-tab{flex:1;padding:10px;text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.05em;cursor:pointer;transition:all .15s;border:none;background:transparent;color:var(--muted)}
+.op-tab.buy-tab.active{color:var(--green);background:rgba(31,212,122,.08)}
+.op-tab.sell-tab.active{color:var(--red);background:rgba(255,61,90,.08)}
+.op-body{padding:14px;display:flex;flex-direction:column;gap:11px}
+.op-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px}
+.op-lbl{color:var(--muted)}.op-val{color:var(--accent);font-weight:600}
+.op-fld{display:flex;flex-direction:column;gap:4px}
+.op-fld label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.pct-row{display:flex;gap:3px;margin-top:3px}
+.pb{flex:1;padding:4px;font-family:var(--mono);font-size:9px;background:var(--s2);border:1px solid var(--b1);color:var(--muted);cursor:pointer;transition:all .12s;border-radius:2px;text-align:center}
+.pb:hover{border-color:var(--accent);color:var(--accent)}
+.exec{width:100%;padding:12px;font-family:var(--display);font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;border-radius:var(--radius);border:none;margin-top:4px}
+.exec.buy-exec{background:var(--green);color:#02040A}.exec.buy-exec:hover{background:var(--g2);transform:translateY(-1px)}
+.exec.sell-exec{background:var(--red);color:#fff}.exec.sell-exec:hover{background:var(--r2);transform:translateY(-1px)}
+.exec:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.api-prompt{background:rgba(56,191,255,.05);border:1px solid rgba(56,191,255,.2);padding:12px 14px;border-radius:var(--radius);font-family:var(--mono);font-size:11px;color:var(--sub);margin-bottom:10px}
+.api-prompt strong{color:var(--accent);display:block;margin-bottom:3px}
+.api-prompt a{color:var(--accent);text-decoration:underline}
+
+/* SCREENER */
+.screen-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--b1);background:var(--s1)}
+.screen-bar select{width:auto;padding:5px 8px}
+.filter-grp{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.fv{color:var(--accent);min-width:32px}
+input[type=range]{padding:0;height:4px;accent-color:var(--accent);cursor:pointer}
+
+/* NEWS */
+.news-layout{display:grid;grid-template-columns:1fr 300px;gap:2px}
+.news-feed{display:flex;flex-direction:column}
+.ni{padding:13px 15px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .12s;display:flex;gap:11px}
+.ni:hover{background:var(--s2)}
+.ni:last-child{border-bottom:none}
+.ni-badge{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:2px 5px;border-radius:2px;white-space:nowrap;height:fit-content;margin-top:3px;flex-shrink:0}
+.ni-hl{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:3px;color:var(--text)}
+.ni-meta{font-family:var(--mono);font-size:9px;color:var(--muted);display:flex;gap:8px}
+.nb-mkt{background:rgba(255,187,51,.1);color:var(--amber);border:1px solid rgba(255,187,51,.2)}
+.nb-fed{background:rgba(56,191,255,.1);color:var(--accent);border:1px solid rgba(56,191,255,.2)}
+.nb-bls{background:rgba(45,212,191,.1);color:var(--teal);border:1px solid rgba(45,212,191,.2)}
+.nb-sec{background:rgba(139,124,246,.1);color:var(--purple);border:1px solid rgba(139,124,246,.2)}
+.nb-cry{background:rgba(244,114,182,.1);color:var(--pink);border:1px solid rgba(244,114,182,.2)}
+.news-sidebar{display:flex;flex-direction:column;gap:2px}
+textarea{resize:vertical;min-height:140px}
+
+/* CATS DEX */
+.cats-layout{display:grid;grid-template-columns:340px 1fr;gap:2px;align-items:start}
+.coin-hero{background:var(--s1);border:1px solid var(--b1);padding:22px;display:flex;flex-direction:column;align-items:center;text-align:center;border-radius:var(--radius)}
+.cats-coin{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 32% 32%,#9DE8FF,var(--accent) 40%,#1a6fa8 75%,#0a2d48);box-shadow:0 0 50px rgba(56,191,255,.5),0 0 100px rgba(56,191,255,.2),inset 0 -8px 24px rgba(0,0,0,.4),inset 0 5px 15px rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;animation:coinFloat 4s ease-in-out infinite;cursor:pointer;transition:box-shadow .3s}
+.cats-coin:hover{box-shadow:0 0 70px rgba(56,191,255,.7),0 0 120px rgba(56,191,255,.3),inset 0 -8px 24px rgba(0,0,0,.4)}
+@keyframes coinFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+.cats-coin svg{width:72px;height:72px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.coin-shine{position:absolute;top:16px;left:22px;width:28px;height:14px;background:rgba(255,255,255,.3);border-radius:50%;transform:rotate(-35deg);pointer-events:none}
+.token-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:100%;margin-top:12px}
+.ts{background:var(--s2);border:1px solid var(--b1);padding:9px;border-radius:var(--radius)}
+.ts-l{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.ts-v{font-family:var(--mono);font-size:12px;font-weight:600}
+.dex-actions{display:flex;gap:6px;width:100%;margin-top:12px}
+.dex-btn{flex:1;padding:10px;font-family:var(--display);font-size:12px;font-weight:700;border-radius:var(--radius);cursor:pointer;transition:all .15s;text-align:center;display:block}
+.dex-buy{background:var(--green);color:#02040A;border:none}.dex-buy:hover{background:var(--g2)}
+.dex-sell{background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.3);color:var(--red)}.dex-sell:hover{background:rgba(255,61,90,.2)}
+.cats-chart-area{background:var(--s1);border:1px solid var(--b1);border-radius:var(--radius);padding:16px}
+.cr-btn{background:var(--s2);border:1px solid var(--b1);color:var(--muted);font-family:var(--mono);font-size:10px;padding:4px 9px;cursor:pointer;transition:all .12s;border-radius:2px}
+.cr-btn.active,.cr-btn:hover{background:var(--accent);color:#02040A;border-color:var(--accent)}
+.step{display:flex;gap:11px;padding:11px 14px;border-bottom:1px solid var(--b1)}
+.step:last-child{border-bottom:none}
+.step-num{width:20px;height:20px;border-radius:50%;background:rgba(56,191,255,.1);border:1px solid rgba(56,191,255,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--accent);flex-shrink:0;margin-top:1px}
+.step-body{font-family:var(--mono);font-size:11px;color:var(--sub);line-height:1.6}
+.step-body strong{color:var(--text);display:block;margin-bottom:1px}
+
+/* PORTFOLIO */
+.port-layout{display:grid;grid-template-columns:1fr 260px;gap:2px;align-items:start}
+
+/* MACRO */
+.macro-layout{display:grid;grid-template-columns:240px 1fr;gap:2px}
+.ev-item{padding:9px 12px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .1s}
+.ev-item:hover{background:var(--s2)}.ev-item.active{background:rgba(56,191,255,.08);border-left:2px solid var(--accent)}
+.ev-type{font-family:var(--mono);font-size:8px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+.ev-ttl{font-size:12px;font-weight:600;line-height:1.3}
+
+/* RADAR */
+.radar-layout{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.sb-row{display:flex;align-items:center;gap:9px;padding:7px 12px;border-bottom:1px solid rgba(22,27,46,.6)}
+.sb-name{font-family:var(--mono);font-size:10px;min-width:95px;color:var(--sub)}
+.sb-track{flex:1;height:3px;background:var(--b1);border-radius:2px;overflow:hidden}
+.sb-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.sb-val{font-family:var(--mono);font-size:10px;min-width:50px;text-align:right}
+.ht{background:var(--s2);border:1px solid var(--b1);padding:9px 7px;cursor:pointer;text-align:center;transition:all .15s;border-radius:var(--radius)}
+.ht:hover{transform:scale(1.04);z-index:2}
+.ht-sym{font-family:var(--mono);font-size:10px;font-weight:700}
+.ht-pct{font-family:var(--mono);font-size:10px;margin-top:1px}
+.heat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:2px}
+.sig-card{background:var(--s2);border:1px solid var(--b1);padding:11px;text-align:center;border-radius:var(--radius)}
+.sig-ico{font-size:16px;margin-bottom:5px}.sig-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.sig-val{font-family:var(--mono);font-size:15px;font-weight:600}
+
+/* SIM */
+.sim-layout{display:grid;grid-template-columns:270px 1fr;gap:2px;align-items:start}
+.st{background:var(--s2);border:1px solid var(--b1);color:var(--muted);font-family:var(--mono);font-size:10px;padding:6px 11px;cursor:pointer;transition:all .12s;border-radius:2px}
+.st.active{background:rgba(56,191,255,.1);border-color:rgba(56,191,255,.3);color:var(--accent)}
+.sim-sec{padding:12px}
+.sim-title{font-family:var(--display);font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)}
+.cr{margin-bottom:9px}.cr-top{display:flex;justify-content:space-between;margin-bottom:3px}
+.cr-l{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.cr-v{font-family:var(--mono);font-size:10px;color:var(--accent)}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;border-bottom:1px solid var(--b1);font-family:var(--mono);font-size:11px}
+.sr:last-child{border-bottom:none}.sr-l{color:var(--muted)}.sr-v{font-weight:600}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2px;max-width:860px;margin:0 auto}
+.pc{background:var(--s1);border:1px solid var(--b1);padding:26px;border-radius:var(--radius)}
+.pc.pro{border-color:rgba(56,191,255,.3);background:rgba(56,191,255,.02)}
+.pc-badge{font-family:var(--mono);font-size:9px;color:var(--accent);background:rgba(56,191,255,.1);border:1px solid rgba(56,191,255,.2);padding:2px 7px;border-radius:2px;margin-bottom:8px;display:inline-block}
+.pc-tier{font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.pc-price{font-family:var(--display);font-size:46px;font-weight:900;letter-spacing:-.04em;margin-bottom:3px}
+.pc-price sup{font-size:18px;vertical-align:super}
+.pc-per{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:18px}
+.pc-feats{list-style:none;margin-bottom:20px}
+.pc-feats li{font-family:var(--mono);font-size:11px;color:var(--sub);padding:5px 0;border-bottom:1px solid var(--b1);display:flex;gap:7px}
+.pc-feats li::before{content:'✓';color:var(--green);flex-shrink:0}
+.pc-btn{width:100%;padding:11px;font-family:var(--display);font-size:13px;font-weight:700;border-radius:var(--radius);cursor:pointer;border:none;transition:all .15s}
+
+/* FOOTER */
+footer{background:var(--s1);border-top:1px solid var(--b1);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* MISC */
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{height:1px;background:var(--b1);margin:12px 0}
+.tag{font-family:var(--mono);font-size:8px;padding:2px 5px;border-radius:2px}
+
+@media(max-width:1100px){.markets-layout,.trade-layout,.cats-layout,.port-layout,.macro-layout,.radar-layout,.sim-layout{grid-template-columns:1fr}.news-layout{grid-template-columns:1fr}}
+@media(max-width:640px){.nav-links{display:none}.hero-h{font-size:30px}.pricing-grid{grid-template-columns:1fr}}
+
+/* ── QUOTE CARD ───────────────────────────────────────────── */
+.quote-card{padding:24px 0 8px}
+.qc-sym{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+.qc-price{font-family:var(--display);font-size:42px;font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
+.qc-chg{font-family:var(--mono);font-size:14px;margin-bottom:16px}
+.qc-meta{display:flex;flex-wrap:wrap;gap:16px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* ── NEWS CARDS ───────────────────────────────────────────── */
+.news-card{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--b1)}
+.news-card:last-child{border-bottom:none}
+.nc-img{width:80px;height:56px;object-fit:cover;border-radius:3px;flex-shrink:0;background:var(--b1)}
+.nc-body{flex:1;display:flex;flex-direction:column;gap:5px}
+.nc-meta{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.nc-hl{font-size:13px;font-weight:600;color:var(--text);text-decoration:none;line-height:1.45}
+.nc-hl:hover{color:var(--a2)}
+.nc-sum{font-size:11px;color:var(--sub);line-height:1.6}
+
+/* ── INLINE NEWS (quote page) ─────────────────────────────── */
+.news-item{padding:14px 0;border-bottom:1px solid var(--b1)}
+.news-item:last-child{border-bottom:none}
+.ni-meta{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.ni-hl{font-size:13px;font-weight:600;color:var(--text);text-decoration:none;display:block;margin-bottom:4px;line-height:1.4}
+.ni-hl:hover{color:var(--a2)}
+.ni-sum{font-size:11px;color:var(--sub);line-height:1.6}
+
+/* ── DATA TABLE ───────────────────────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{padding:8px 12px;text-align:left;color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--b1);font-weight:400}
+.data-table td{padding:12px 12px;border-bottom:1px solid rgba(22,27,46,.5);font-family:var(--mono)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(56,191,255,.03)}
+
+/* ── SIMULATOR ────────────────────────────────────────────── */
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px}
+.sim-inputs{display:flex;flex-direction:column;gap:12px}
+.sim-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.sim-field input{width:100%;background:var(--s2);border:1px solid var(--b1);color:var(--text);padding:10px 12px;border-radius:var(--radius);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .15s}
+.sim-field input:focus{border-color:var(--accent)}
+.sim-results{background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:20px}
+.sim-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--b1);font-size:12px}
+.sim-row:last-child{border-bottom:none}
+.sim-row span{color:var(--sub);font-family:var(--mono);font-size:11px}
+.sim-row strong{font-family:var(--mono);font-size:14px}
+
+/* ── HOME MOVERS TABLE ────────────────────────────────────── */
+.movers-table{width:100%;border-collapse:collapse}
+.movers-table td{padding:10px 12px;border-bottom:1px solid rgba(22,27,46,.5);font-size:12px;font-family:var(--mono)}
+.movers-table tr:last-child td{border-bottom:none}
+.movers-table tr:hover td{background:rgba(56,191,255,.04);cursor:pointer}
+
+/* ── SECTION TITLE ────────────────────────────────────────── */
+.section-title{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--b1)}
+
+/* ── HOME STAT TILES ──────────────────────────────────────── */
+.home-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+.hs-tile{background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:16px;text-align:center}
+.hs-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.hs-val{font-family:var(--mono);font-size:18px;font-weight:700;margin-bottom:2px}
+.hs-chg{font-family:var(--mono);font-size:11px}
+@media(max-width:700px){.home-stats{grid-template-columns:repeat(2,1fr)}.sim-grid{grid-template-columns:1fr}}
+
+/* ── NEWS SEARCH BAR ──────────────────────────────────────── */
+.search-bar{display:flex;gap:8px;margin-bottom:20px}
+.search-bar input{flex:1;background:var(--s2);border:1px solid var(--b1);color:var(--text);padding:10px 14px;border-radius:var(--radius);font-family:var(--mono);font-size:12px;text-transform:uppercase;outline:none;max-width:200px}
+.search-bar input:focus{border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="logo" onclick="go('home')">
+    <div class="logo-icon">🐱</div>
+    <div class="logo-name">Market<em>Cat</em></div>
+  </div>
+  <div class="nav-links">
+    <button class="nb" data-page="home"      onclick="go('home')">Home</button>
+    <button class="nb" data-page="markets"   onclick="go('markets')">Markets</button>
+    <button class="nb" data-page="quote"     onclick="go('quote')">Quote</button>
+    <button class="nb" data-page="news"      onclick="go('news')">News</button>
+    <button class="nb" data-page="crypto"    onclick="go('crypto')">Crypto</button>
+    <button class="nb" data-page="simulator" onclick="go('simulator')">Simulator</button>
+  </div>
+  <div class="nav-right">
+    <div class="live-dot"></div>
+    <span id="liveStatus">Loading…</span>
+  </div>
+</nav>
+
+<!-- ── TICKER ────────────────────────────────────────────────────────────── -->
+<div class="ticker-wrap">
+  <div class="ticker-rail" id="tickerRail">
+    <span class="ti"><span class="ti-sym">AAPL</span><span class="ti-price">—</span></span>
+    <span class="ti"><span class="ti-sym">MSFT</span><span class="ti-price">—</span></span>
+    <span class="ti"><span class="ti-sym">NVDA</span><span class="ti-price">—</span></span>
+    <span class="ti"><span class="ti-sym">TSLA</span><span class="ti-price">—</span></span>
+    <span class="ti"><span class="ti-sym">META</span><span class="ti-price">—</span></span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     HOME PAGE
+══════════════════════════════════════════════════════════════ -->
+<div id="page-home" class="page">
+  <div class="wrap">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">// MarketCat Pro · Real-time Markets</div>
+      <h1 class="hero-h">Markets,&nbsp;<em>simplified.</em></h1>
+      <p class="hero-sub">Live stock quotes · Charts · News · Crypto · Position sizing</p>
+      <div class="hero-btns">
+        <button class="btn btn-a" onclick="go('markets')">Live Markets →</button>
+        <button class="btn" onclick="go('quote')" style="border-color:var(--b2)">Look Up a Stock</button>
+      </div>
+    </div>
+
+    <!-- Live stat tiles -->
+    <div class="home-stats">
+      <div class="hs-tile">
+        <div class="hs-label">Apple</div>
+        <div id="stat-aapl"><div class="hs-val">—</div></div>
+      </div>
+      <div class="hs-tile">
+        <div class="hs-label">Microsoft</div>
+        <div id="stat-msft"><div class="hs-val">—</div></div>
+      </div>
+      <div class="hs-tile">
+        <div class="hs-label">NVIDIA</div>
+        <div id="stat-nvda"><div class="hs-val">—</div></div>
+      </div>
+      <div class="hs-tile">
+        <div class="hs-label">Tesla</div>
+        <div id="stat-tsla"><div class="hs-val">—</div></div>
+      </div>
+    </div>
+
+    <!-- Top movers -->
+    <div class="section-title" style="margin-top:32px">Top Movers Today</div>
+    <table class="movers-table">
+      <thead>
+        <tr style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">
+          <td style="padding:8px 12px">Symbol</td>
+          <td style="padding:8px 12px">Price</td>
+          <td style="padding:8px 12px">Change</td>
+        </tr>
+      </thead>
+      <tbody id="homeMovers">
+        <tr><td colspan="3" style="padding:20px 12px;color:var(--muted);font-family:var(--mono);font-size:11px">Loading…</td></tr>
+      </tbody>
+    </table>
+    <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:16px">Click any symbol to view full quote &amp; chart</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MARKETS PAGE
+══════════════════════════════════════════════════════════════ -->
+<div id="page-markets" class="page" style="display:none">
+  <div class="wrap">
+    <div class="pg-hdr">
+      <div class="pg-lbl">// Live Prices</div>
+      <div class="pg-title">Markets</div>
+      <div class="pg-sub">Click any symbol to see the full chart and news</div>
+    </div>
+    <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start">
+      <div>
+        <div class="section-title">Stocks</div>
+        <table class="movers-table">
+          <thead><tr style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">
+            <td style="padding:8px 12px">Symbol</td><td style="padding:8px 12px">Price</td><td style="padding:8px 12px">Chg%</td><td style="padding:8px 12px">Open</td>
+          </tr></thead>
+          <tbody id="marketsList">
+            <tr><td colspan="4" style="padding:20px 12px;color:var(--muted);font-family:var(--mono);font-size:11px">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="section-title" id="marketsChartLabel">Chart</div>
+        <div style="height:300px;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:16px">
+          <canvas id="marketsChart" style="width:100%;height:100%"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     QUOTE PAGE
+══════════════════════════════════════════════════════════════ -->
+<div id="page-quote" class="page" style="display:none">
+  <div class="wrap">
+    <div class="pg-hdr">
+      <div class="pg-lbl">// Stock Lookup</div>
+      <div class="pg-title">Quote</div>
+    </div>
+    <div class="search-bar">
+      <input id="quoteSearch" type="text" placeholder="AAPL" maxlength="10"
+        onkeydown="if(event.key==='Enter') searchQuote()"
+        style="text-transform:uppercase"/>
+      <button class="btn btn-a" onclick="searchQuote()">Look Up →</button>
+    </div>
+    <div id="quotePanel">
+      <div style="color:var(--muted);font-family:var(--mono);font-size:12px;padding:20px 0">Enter a symbol above to get a live quote, chart, and recent news.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     NEWS PAGE
+══════════════════════════════════════════════════════════════ -->
+<div id="page-news" class="page" style="display:none">
+  <div class="wrap">
+    <div class="pg-hdr">
+      <div class="pg-lbl">// Company News</div>
+      <div class="pg-title">News Feed</div>
+    </div>
+    <div class="search-bar">
+      <input id="newsSymInput" type="text" placeholder="AAPL" maxlength="10"
+        onkeydown="if(event.key==='Enter') searchNews()"
+        style="text-transform:uppercase"/>
+      <button class="btn btn-a" onclick="searchNews()">Search →</button>
+    </div>
+    <div id="newsFeed">
+      <div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px 0">Enter a symbol to load news.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     CRYPTO PAGE
+══════════════════════════════════════════════════════════════ -->
+<div id="page-crypto" class="page" style="display:none">
+  <div class="wrap">
+    <div class="pg-hdr">
+      <div class="pg-lbl">// Cryptocurrency</div>
+      <div class="pg-title">Crypto Prices</div>
+      <div class="pg-sub">Live prices via CoinGecko · Top 5 by market cap</div>
+    </div>
+    <div id="cryptoList">
+      <div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px 0">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SIMULATOR PAGE
+══════════════════════════════════════════════════════════════ -->
+<div id="page-simulator" class="page" style="display:none">
+  <div class="wrap">
+    <div class="pg-hdr">
+      <div class="pg-lbl">// Risk Calculator</div>
+      <div class="pg-title">Position Sizing</div>
+      <div class="pg-sub">Figure out exactly how many shares to buy based on your risk tolerance</div>
+    </div>
+    <div class="sim-grid">
+      <div class="sim-inputs">
+        <div class="sim-field">
+          <label>Account Size ($)</label>
+          <input id="simAcct" type="number" value="50000" oninput="calcPosition()"/>
+        </div>
+        <div class="sim-field">
+          <label>Risk per Trade (% of account)</label>
+          <input id="simRisk" type="number" value="1" step="0.1" min="0.1" max="10" oninput="calcPosition()"/>
+        </div>
+        <div class="sim-field">
+          <label>Entry Price ($)</label>
+          <input id="simEntry" type="number" value="150" oninput="calcPosition()"/>
+        </div>
+        <div class="sim-field">
+          <label>Stop Loss Price ($)</label>
+          <input id="simStop" type="number" value="144" oninput="calcPosition()"/>
+        </div>
+        <div class="sim-field">
+          <label>Target Price ($)</label>
+          <input id="simTarget" type="number" value="165" oninput="calcPosition()"/>
+        </div>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;margin-top:8px">
+          Enter your account size and how much you're willing to lose on this trade. The calculator tells you exactly how many shares to buy.
+        </p>
+      </div>
+      <div class="sim-results" id="simResults">
+        <div style="color:var(--muted);font-family:var(--mono);font-size:11px">Fill in the fields to see results.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ABOUT PAGE (hidden, accessible via footer)
+══════════════════════════════════════════════════════════════ -->
+<div id="page-about" class="page" style="display:none">
+  <div class="wrap">
+    <div class="pg-hdr">
+      <div class="pg-lbl">// Info</div>
+      <div class="pg-title">About MarketCat</div>
+    </div>
+    <div style="max-width:600px;font-size:14px;color:var(--sub);line-height:1.9">
+      <p>MarketCat Pro is a real-time markets dashboard built for everyday investors.</p>
+      <br/>
+      <p><strong style="color:var(--text)">Data Sources</strong><br/>
+      Stock quotes and news are powered by <a href="https://finnhub.io" target="_blank">Finnhub</a> (free API).<br/>
+      Crypto prices are powered by <a href="https://coingecko.com" target="_blank">CoinGecko</a> (free, no key needed).</p>
+      <br/>
+      <p><strong style="color:var(--text)">Disclaimer</strong><br/>
+      This is not financial advice. Data may be delayed. Always do your own research before making investment decisions.</p>
+      <br/>
+      <p style="font-family:var(--mono);font-size:11px;color:var(--muted)">Built by Charlie McMillan</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer style="border-top:1px solid var(--b1);padding:20px 32px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:40px">
+  <span onclick="go('about')" style="cursor:pointer">MarketCat Pro</span> &nbsp;·&nbsp; Data: Finnhub &amp; CoinGecko &nbsp;·&nbsp; Not financial advice
+</footer>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARKETCAT PRO · MAIN JS
+// All market data comes from /api/* Vercel serverless functions (Finnhub)
+// CoinGecko used directly for crypto (has CORS headers, no key needed)
+// Charts powered by Chart.js
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const $q = sel => document.querySelector(sel);
+const $all = sel => [...document.querySelectorAll(sel)];
+
+function fmt(n, d = 2) {
+  if (n == null || isNaN(n)) return '—';
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function fmtPrice(n) {
+  if (n == null || isNaN(n)) return '—';
+  if (n >= 1000) return '$' + fmt(n, 2);
+  if (n >= 1)    return '$' + Number(n).toFixed(2);
+  return '$' + Number(n).toFixed(4);
+}
+function fmtPct(n) {
+  if (n == null || isNaN(n)) return '—';
+  const s = n >= 0 ? '+' : '';
+  return s + Number(n).toFixed(2) + '%';
+}
+function fmtVol(n) {
+  if (!n) return '—';
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n;
+}
+function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function pop(msg) {
+  const el = $('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── LOCAL STORAGE ─────────────────────────────────────────────────────────────
+const LS = {
+  get: (k, def = null) => { try { const v = localStorage.getItem(k); return v != null ? JSON.parse(v) : def; } catch { return def; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+// ── LIVE QUOTE CACHE ──────────────────────────────────────────────────────────
+// LQ[symbol] = { symbol, price, change, changePct, high, low, open, prevClose }
+const LQ = {};
+
+// ── API FETCH HELPERS ─────────────────────────────────────────────────────────
+async function apiFetch(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// Load top movers from /api/movers and populate LQ cache
+async function loadMovers() {
+  try {
+    const data = await apiFetch('/api/movers');
+    if (!Array.isArray(data)) return;
+    for (const q of data) {
+      LQ[q.symbol] = q;
+    }
+    return data;
+  } catch (e) {
+    console.warn('loadMovers:', e.message);
+    return [];
+  }
+}
+
+// Load a single quote from /api/quote
+async function loadQuote(symbol) {
+  try {
+    const d = await apiFetch('/api/quote?symbol=' + encodeURIComponent(symbol));
+    LQ[symbol] = d;
+    return d;
+  } catch (e) {
+    console.warn('loadQuote ' + symbol + ':', e.message);
+    return null;
+  }
+}
+
+// Load candles from /api/candles
+async function loadCandles(symbol, days, resolution) {
+  try {
+    const d = await apiFetch(`/api/candles?symbol=${encodeURIComponent(symbol)}&days=${days}&resolution=${resolution || 'D'}`);
+    return d.candles || [];
+  } catch (e) {
+    console.warn('loadCandles:', e.message);
+    return [];
+  }
+}
+
+// Load news from /api/news
+async function loadNews(symbol) {
+  try {
+    const d = await apiFetch('/api/news?symbol=' + encodeURIComponent(symbol));
+    return d.articles || [];
+  } catch (e) {
+    console.warn('loadNews:', e.message);
+    return [];
+  }
+}
+
+// CoinGecko — no key needed, has CORS headers
+async function loadCrypto() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,dogecoin,cardano&order=market_cap_desc&per_page=5&page=1&sparkline=false');
+    return await r.json();
+  } catch (e) {
+    console.warn('loadCrypto:', e.message);
+    return [];
+  }
+}
+
+// ── ROUTER ────────────────────────────────────────────────────────────────────
+const PAGES = ['home', 'markets', 'quote', 'news', 'crypto', 'simulator', 'about'];
+const inited = {};
+
+function go(name) {
+  PAGES.forEach(p => {
+    const el = $('page-' + p);
+    if (el) el.style.display = p === name ? '' : 'none';
+  });
+  $all('.nb').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === name);
+  });
+  window.scrollTo(0, 0);
+  if (!inited[name]) {
+    inited[name] = true;
+    initPage(name);
+  }
+  // Update liveStatus page label
+  const labels = { home: 'Dashboard', markets: 'Markets', quote: 'Quote', news: 'News', crypto: 'Crypto', simulator: 'Simulator', about: 'About' };
+  const ls = $('liveStatus');
+  if (ls && !ls._live) ls.textContent = labels[name] || name;
+}
+
+async function initPage(name) {
+  if (name === 'home')      await initHome();
+  if (name === 'markets')   await initMarkets();
+  if (name === 'quote')     await initQuotePage();
+  if (name === 'news')      await initNewsPage();
+  if (name === 'crypto')    await initCryptoPage();
+  if (name === 'simulator') initSimulator();
+}
+
+// ── TICKER BAR ────────────────────────────────────────────────────────────────
+const TICKER_SYMS = ['AAPL','MSFT','NVDA','AMZN','TSLA','META','GOOGL','JPM','GS','AMD'];
+
+function buildTicker() {
+  const rail = $('tickerRail');
+  if (!rail) return;
+  const items = TICKER_SYMS.map(sym => {
+    const q = LQ[sym];
+    if (!q) return `<span class="ti"><span class="ti-sym">${sym}</span><span class="ti-price">—</span></span>`;
+    const cls = (q.changePct || q.dp || 0) >= 0 ? 'up' : 'dn';
+    const price = q.price || q.c || 0;
+    const pct = q.changePct || q.dp || 0;
+    return `<span class="ti"><span class="ti-sym">${sym}</span><span class="ti-price">$${price.toFixed(2)}</span><span class="ti-chg ${cls}">${fmtPct(pct)}</span></span>`;
+  }).join('');
+  // Duplicate for seamless loop
+  rail.innerHTML = items + items;
+}
+
+// ── HOME PAGE ─────────────────────────────────────────────────────────────────
+async function initHome() {
+  pop('Loading market data…');
+  const movers = await loadMovers();
+  buildTicker();
+  renderHomeMovers(movers);
+  renderHomeStats();
+  pop('Markets loaded ✓');
+  const ls = $('liveStatus');
+  if (ls) { ls.textContent = 'LIVE · ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); ls._live = true; }
+}
+
+function renderHomeStats() {
+  const stats = [
+    { id: 'stat-aapl', sym: 'AAPL', label: 'Apple' },
+    { id: 'stat-msft', sym: 'MSFT', label: 'Microsoft' },
+    { id: 'stat-nvda', sym: 'NVDA', label: 'NVIDIA' },
+    { id: 'stat-tsla', sym: 'TSLA', label: 'Tesla' },
+  ];
+  stats.forEach(({ id, sym }) => {
+    const el = $(id);
+    if (!el) return;
+    const q = LQ[sym];
+    if (!q) return;
+    const cls = (q.changePct || 0) >= 0 ? 'up' : 'dn';
+    el.innerHTML = `<div class="hs-val">${fmtPrice(q.price)}</div><div class="hs-chg ${cls}">${fmtPct(q.changePct)}</div>`;
+  });
+}
+
+function renderHomeMovers(movers) {
+  const el = $('homeMovers');
+  if (!el || !movers?.length) return;
+  el.innerHTML = movers.slice(0, 8).map(q => {
+    const cls = (q.changePct || 0) >= 0 ? 'up' : 'dn';
+    const arrow = (q.changePct || 0) >= 0 ? '▲' : '▼';
+    return `<tr onclick="goQuote('${q.symbol}')" style="cursor:pointer">
+      <td><strong style="color:var(--accent)">${q.symbol}</strong></td>
+      <td>${fmtPrice(q.price)}</td>
+      <td class="${cls}">${arrow} ${fmtPct(q.changePct)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MARKETS PAGE ──────────────────────────────────────────────────────────────
+let marketsChart = null;
+
+async function initMarkets() {
+  const el = $('marketsList');
+  if (!el) return;
+  el.innerHTML = '<tr><td colspan="4" style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading…</td></tr>';
+
+  const movers = Object.keys(LQ).length > 0 ? Object.values(LQ) : await loadMovers();
+
+  el.innerHTML = movers.map(q => {
+    const cls = (q.changePct || 0) >= 0 ? 'up' : 'dn';
+    const arrow = (q.changePct || 0) >= 0 ? '▲' : '▼';
+    return `<tr onclick="goQuote('${q.symbol}')" style="cursor:pointer">
+      <td><strong style="color:var(--accent)">${q.symbol}</strong></td>
+      <td style="font-family:var(--mono)">${fmtPrice(q.price)}</td>
+      <td class="${cls}" style="font-family:var(--mono)">${arrow} ${fmtPct(q.changePct)}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${fmtPrice(q.open)}</td>
+    </tr>`;
+  }).join('');
+
+  // Load chart for AAPL by default
+  loadMarketsChart('AAPL');
+}
+
+async function loadMarketsChart(symbol) {
+  const cv = $('marketsChart');
+  if (!cv) return;
+  const label = $('marketsChartLabel');
+  if (label) label.textContent = symbol + ' — 30 Day Price';
+
+  const candles = await loadCandles(symbol, 30, 'D');
+  if (!candles.length) {
+    if (label) label.textContent = symbol + ' — No chart data available';
+    return;
+  }
+
+  const labels = candles.map(c => new Date(c.time * 1000).toLocaleDateString('en-US', {month:'short', day:'numeric'}));
+  const prices = candles.map(c => c.close);
+  const color = prices[prices.length - 1] >= prices[0] ? '#1FD47A' : '#FF3D5A';
+
+  if (marketsChart) marketsChart.destroy();
+  marketsChart = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: prices,
+        borderColor: color,
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.3,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+          g.addColorStop(0, color + '33');
+          g.addColorStop(1, color + '00');
+          return g;
+        }
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#0A0D16', borderColor: '#1E2540', borderWidth: 1,
+        titleColor: '#4E566E', bodyColor: '#E8E6F4',
+        callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(2) }
+      }},
+      scales: {
+        x: { grid: { color: '#06090F' }, ticks: { color: '#2A3050', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 8 }},
+        y: { grid: { color: '#06090F' }, ticks: { color: '#2A3050', font: { family: 'JetBrains Mono', size: 9 }, callback: v => '$' + v.toFixed(0) }, position: 'right' }
+      }
+    }
+  });
+}
+
+// ── QUOTE PAGE ────────────────────────────────────────────────────────────────
+let quoteChart = null;
+let currentQuoteSym = 'AAPL';
+
+function goQuote(symbol) {
+  currentQuoteSym = symbol;
+  go('quote');
+}
+
+async function initQuotePage() {
+  renderQuotePage(currentQuoteSym);
+}
+
+async function searchQuote() {
+  const input = $('quoteSearch');
+  if (!input) return;
+  const sym = input.value.trim().toUpperCase();
+  if (!sym) return;
+  currentQuoteSym = sym;
+  await renderQuotePage(sym);
+}
+
+async function renderQuotePage(symbol) {
+  const panel = $('quotePanel');
+  if (!panel) return;
+  panel.innerHTML = `<div style="font-family:var(--mono);color:var(--muted);padding:20px">Loading ${symbol}…</div>`;
+
+  const [q, candles, articles] = await Promise.all([
+    loadQuote(symbol),
+    loadCandles(symbol, 90, 'D'),
+    loadNews(symbol)
+  ]);
+
+  if (!q || !q.price) {
+    panel.innerHTML = `<div style="font-family:var(--mono);color:var(--red);padding:20px">Symbol not found: ${symbol}</div>`;
+    return;
+  }
+
+  const cls = (q.changePct || 0) >= 0 ? 'up' : 'dn';
+  const arrow = (q.changePct || 0) >= 0 ? '▲' : '▼';
+
+  panel.innerHTML = `
+    <div class="quote-card">
+      <div class="qc-sym">${q.symbol}</div>
+      <div class="qc-price">${fmtPrice(q.price)}</div>
+      <div class="qc-chg ${cls}">${arrow} ${fmtPct(q.changePct)} &nbsp; ${q.change >= 0 ? '+' : ''}${fmt(q.change, 2)}</div>
+      <div class="qc-meta">
+        <span>Open: ${fmtPrice(q.open)}</span>
+        <span>High: ${fmtPrice(q.high)}</span>
+        <span>Low: ${fmtPrice(q.low)}</span>
+        <span>Prev Close: ${fmtPrice(q.prevClose)}</span>
+      </div>
+    </div>
+    <canvas id="quoteChartCanvas" style="width:100%;height:280px;margin-top:20px"></canvas>
+    <div class="news-section" style="margin-top:28px">
+      <div class="section-title">Recent News · ${symbol}</div>
+      <div id="quoteNews"></div>
+    </div>`;
+
+  // Draw chart
+  if (candles.length > 0) {
+    const cv = $('quoteChartCanvas');
+    const labels = candles.map(c => new Date(c.time * 1000).toLocaleDateString('en-US', {month:'short', day:'numeric'}));
+    const prices = candles.map(c => c.close);
+    const color = prices[prices.length - 1] >= prices[0] ? '#1FD47A' : '#FF3D5A';
+    if (quoteChart) quoteChart.destroy();
+    quoteChart = new Chart(cv.getContext('2d'), {
+      type: 'line',
+      data: { labels, datasets: [{ data: prices, borderColor: color, borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3,
+        backgroundColor: ctx => { const g = ctx.chart.ctx.createLinearGradient(0,0,0,250); g.addColorStop(0, color+'33'); g.addColorStop(1, color+'00'); return g; }
+      }]},
+      options: { responsive: true, plugins: { legend: { display: false },
+        tooltip: { backgroundColor:'#0A0D16', borderColor:'#1E2540', borderWidth:1, titleColor:'#4E566E', bodyColor:'#E8E6F4',
+          callbacks: { label: ctx => ' $' + ctx.parsed.y.toFixed(2) }}},
+        scales: {
+          x: { grid: { color:'#06090F' }, ticks: { color:'#2A3050', font:{ family:'JetBrains Mono', size:9 }, maxTicksLimit:10 }},
+          y: { grid: { color:'#06090F' }, ticks: { color:'#2A3050', font:{ family:'JetBrains Mono', size:9 }, callback: v => '$'+v.toFixed(0) }, position:'right' }
+        }
+      }
+    });
+  }
+
+  // Render news
+  const newsEl = $('quoteNews');
+  if (newsEl) {
+    if (!articles.length) {
+      newsEl.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:12px 0">No recent news found.</div>';
+    } else {
+      newsEl.innerHTML = articles.slice(0, 6).map(a => {
+        const d = new Date(a.datetime * 1000).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+        return `<div class="news-item">
+          <div class="ni-meta">${a.source || ''} · ${d}</div>
+          <a class="ni-hl" href="${a.url}" target="_blank" rel="noopener">${a.headline}</a>
+          ${a.summary ? `<div class="ni-sum">${a.summary.slice(0, 160)}…</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+  }
+}
+
+// ── NEWS PAGE ─────────────────────────────────────────────────────────────────
+async function initNewsPage() {
+  const sym = LS.get('lastNewsSym', 'AAPL');
+  const inp = $('newsSymInput');
+  if (inp) inp.value = sym;
+  await fetchAndRenderNews(sym);
+}
+
+async function fetchAndRenderNews(symbol) {
+  const el = $('newsFeed');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading news for ' + symbol + '…</div>';
+  LS.set('lastNewsSym', symbol);
+
+  const articles = await loadNews(symbol);
+  if (!articles.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">No news found for ' + symbol + '. Try another symbol.</div>';
+    return;
+  }
+  el.innerHTML = articles.map(a => {
+    const d = new Date(a.datetime * 1000).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+    return `<div class="news-card">
+      ${a.image ? `<img class="nc-img" src="${a.image}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
+      <div class="nc-body">
+        <div class="nc-meta">${a.source || 'News'} &nbsp;·&nbsp; ${d}</div>
+        <a class="nc-hl" href="${a.url}" target="_blank" rel="noopener">${a.headline}</a>
+        ${a.summary ? `<div class="nc-sum">${a.summary.slice(0, 200)}…</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function searchNews() {
+  const sym = ($('newsSymInput')?.value || '').trim().toUpperCase();
+  if (sym) fetchAndRenderNews(sym);
+}
+
+// ── CRYPTO PAGE ───────────────────────────────────────────────────────────────
+async function initCryptoPage() {
+  const el = $('cryptoList');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Loading crypto prices…</div>';
+  const coins = await loadCrypto();
+  if (!coins.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:20px">Could not load crypto data. CoinGecko may be rate-limited. Try again in a moment.</div>';
+    return;
+  }
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Coin</th><th>Price</th><th>24h Change</th><th>Market Cap</th><th>24h Volume</th></tr></thead>
+    <tbody>${coins.map(c => {
+      const cls = c.price_change_percentage_24h >= 0 ? 'up' : 'dn';
+      const arrow = c.price_change_percentage_24h >= 0 ? '▲' : '▼';
+      return `<tr>
+        <td><strong style="color:var(--accent)">${c.symbol.toUpperCase()}</strong> <span style="color:var(--muted)">${c.name}</span></td>
+        <td style="font-family:var(--mono)">${fmtPrice(c.current_price)}</td>
+        <td class="${cls}" style="font-family:var(--mono)">${arrow} ${fmtPct(c.price_change_percentage_24h)}</td>
+        <td style="font-family:var(--mono);color:var(--sub)">$${fmtVol(c.market_cap)}</td>
+        <td style="font-family:var(--mono);color:var(--sub)">$${fmtVol(c.total_volume)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ── SIMULATOR PAGE ────────────────────────────────────────────────────────────
+function initSimulator() {
+  calcPosition();
+}
+
+function calcPosition() {
+  const acct   = parseFloat($('simAcct')?.value) || 50000;
+  const riskPct = parseFloat($('simRisk')?.value) || 1;
+  const entry  = parseFloat($('simEntry')?.value) || 150;
+  const stop   = parseFloat($('simStop')?.value) || 144;
+  const target = parseFloat($('simTarget')?.value) || 165;
+
+  if (entry <= 0 || stop <= 0 || entry === stop) return;
+
+  const riskPerShare = Math.abs(entry - stop);
+  const dollarRisk   = acct * riskPct / 100;
+  const shares       = Math.floor(dollarRisk / riskPerShare);
+  const rr           = riskPerShare > 0 ? (target - entry) / riskPerShare : 0;
+  const maxLoss      = shares * riskPerShare;
+  const maxGain      = shares * (target - entry);
+
+  const res = $('simResults');
+  if (!res) return;
+  const rrCls = rr >= 2 ? 'up' : rr >= 1 ? '' : 'dn';
+  res.innerHTML = `
+    <div class="sim-row"><span>Shares to Buy</span><strong style="color:var(--accent)">${shares.toLocaleString()}</strong></div>
+    <div class="sim-row"><span>Max Risk ($)</span><strong class="dn">-$${fmt(maxLoss, 0)}</strong></div>
+    <div class="sim-row"><span>Max Gain ($)</span><strong class="up">+$${fmt(maxGain, 0)}</strong></div>
+    <div class="sim-row"><span>Risk : Reward</span><strong class="${rrCls}">1 : ${rr.toFixed(2)}</strong></div>
+    <div class="sim-row"><span>Position Size</span><strong>$${fmt(shares * entry, 0)}</strong></div>
+    <div class="sim-row"><span>% of Account</span><strong>${fmt((shares * entry / acct) * 100, 1)}%</strong></div>`;
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+(function boot() {
+  // Show home page immediately
+  go('home');
+})();
+
+</script>
+</body>
+</html>
